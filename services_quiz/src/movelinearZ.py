@@ -7,31 +7,26 @@ from geometry_msgs.msg import Twist
 
 def my_callback(request):
     print("my_callback has been called")
-    start_time = datetime.now()
-    turn = Twist()
+    move = Twist()
+    i = 0
+    duration = request.duration 
+    start_time = rospy.get_time()
     
-    if request.duration <= 0:
-        rospy.logwarn("Duration should be a positive value")
-        response = ServMessResponse()
-        response.success = False
-        return response
-
-    if request.direction == 'up':
-        turn.linear.z = 0.5  # Move up
-    elif request.direction == 'down':
-        turn.linear.z = -0.5  # Move down
-    else:
-        rospy.logwarn("Invalid direction. Please specify 'up' or 'down'.")
-        response = ServMessResponse()
-        response.success = False
-        return response
-
-    while (datetime.now() - start_time).total_seconds() < request.duration:
-        pub.publish(turn)
-        rospy.sleep(0.1)  # Adjust as needed
-
-    turn.linear.z = 0.0  # Stop linear motion
-    pub.publish(turn)
+    while start_time + duration > rospy.get_time() :
+        if request.direction == 'up':
+            move.linear.z = 2
+            pub.publish(move)
+        elif request.direction == 'down':
+            move.linear.z = -2
+            pub.publish(move)
+        
+        i += 1
+        rate.sleep()
+    
+    move.linear.z = 0
+    move.linear.x = 0  # Assuming you want to stop other linear movement axes
+    move.linear.y = 0  # Assuming you want to stop other linear movement axes
+    pub.publish(move)
     
     response = ServMessResponse()
     response.success = True
